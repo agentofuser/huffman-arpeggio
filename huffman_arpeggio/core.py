@@ -1,6 +1,3 @@
-# huffman_arpeggio/core.py
-
-import pandas as pd
 from heapq import heappush, heappop, heapify
 import math
 
@@ -15,7 +12,11 @@ class Node:
         return self.count < other.count
 
     def __repr__(self):
-        return f"Node(count={self.count}, character={self.character}, children={self.children})"
+        return (
+            f"Node(count={self.count}, "
+            f"character={self.character}, "
+            f"children={self.children})"
+        )
 
 
 def calculate_padding(num_elements, num_branches):
