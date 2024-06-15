@@ -4,9 +4,9 @@ This repository contains an illustrative experiment demonstrating the concept of
 
 ### Visualizations
 
-![Playstation-QWERTY Overlay Mockup](playstation-qwerty-overlay-mockup.png)
+![Playstation-QWERTY Overlay Mockup](docs/playstation-qwerty-overlay-mockup.png)
 
-![Huffman-Arpeggio Table](playstation-huffman-arpeggio-table-sample.png)
+![Huffman-Arpeggio Table](docs/playstation-huffman-arpeggio-table-sample.png)
 
 ## Introduction
 
