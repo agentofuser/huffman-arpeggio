@@ -63,29 +63,32 @@ def generate_encoding_map_with_freq(root, alphabet, frequency_dict):
     traverse(root, [], encoding_map)
     return encoding_map
 
-def main(file_path, output_path):
+def load_frequency_dict(file_path, sequence_col, target_col):
     df = pd.read_csv(file_path)
-    frequency_dict = df.set_index('keyswitch')['freq'].to_dict()
+    return df.set_index(sequence_col)[target_col].to_dict()
 
-    alphabet = ['X', 'O', '□', '∆', '⬇️', '⬆️', '⬅️', '➡️']
-
-    root = build_huffman_tree(frequency_dict, alphabet)
-    encoding_map_with_freq = generate_encoding_map_with_freq(root, alphabet, frequency_dict)
-
-    encoding_map_data_with_freq = [{'sequence': ' '.join(path), 'keyswitch': keyswitch, 'frequency': freq} for path, (keyswitch, freq) in encoding_map_with_freq.items()]
-
+def save_encoding_map_with_freq(encoding_map_with_freq, output_path):
+    encoding_map_data_with_freq = [{'sequence': ' '.join(path), 'target': target, 'frequency': freq} for path, (target, freq) in encoding_map_with_freq.items()]
     encoding_map_df_with_freq = pd.DataFrame(encoding_map_data_with_freq)
     encoding_map_df_with_freq.sort_values(by='frequency', ascending=False, inplace=True)
     encoding_map_df_with_freq.reset_index(drop=True, inplace=True)
-
     encoding_map_df_with_freq.to_csv(output_path, index=False)
+
+def main(file_path, output_path, sequence_col, target_col):
+    frequency_dict = load_frequency_dict(file_path, sequence_col, target_col)
+    alphabet = ['X', 'O', '□', '∆', '⬇️', '⬆️', '⬅️', '➡️']
+    root = build_huffman_tree(frequency_dict, alphabet)
+    encoding_map_with_freq = generate_encoding_map_with_freq(root, alphabet, frequency_dict)
+    save_encoding_map_with_freq(encoding_map_with_freq, output_path)
     print(f"Encoding map with frequencies has been written to {output_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python huffman-arpeggio.py <input_file_path> <output_file_path>")
+    if len(sys.argv) != 5:
+        print("Usage: python -m huffman_arpeggio <input_file_path> <output_file_path> <sequence_col> <target_col>")
         sys.exit(1)
     
     input_file_path = sys.argv[1]
     output_file_path = sys.argv[2]
-    main(input_file_path, output_file_path)
+    sequence_col = sys.argv[3]
+    target_col = sys.argv[4]
+    main(input_file_path, output_file_path, sequence_col, target_col)
