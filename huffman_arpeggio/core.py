@@ -1,4 +1,5 @@
-import sys
+# huffman_arpeggio/core.py
+
 import pandas as pd
 from heapq import heappush, heappop, heapify
 import math
@@ -62,33 +63,3 @@ def generate_encoding_map_with_count(root, alphabet, count_dict):
     encoding_map = {}
     traverse(root, [], encoding_map)
     return encoding_map
-
-def load_count_dict(file_path, target_col, count_col):
-    df = pd.read_csv(file_path)
-    return df.set_index(target_col)[count_col].to_dict()
-
-def save_encoding_map_with_count(encoding_map_with_count, output_path):
-    encoding_map_data_with_count = [{'sequence': ' '.join(path), 'target': target, 'count': count} for path, (target, count) in encoding_map_with_count.items()]
-    encoding_map_df_with_count = pd.DataFrame(encoding_map_data_with_count)
-    encoding_map_df_with_count.sort_values(by='count', ascending=False, inplace=True)
-    encoding_map_df_with_count.reset_index(drop=True, inplace=True)
-    encoding_map_df_with_count.to_csv(output_path, index=False)
-
-def main(file_path, output_path, target_col, count_col):
-    count_dict = load_count_dict(file_path, target_col, count_col)
-    alphabet = ['X', 'O', '□', '∆', '⬇️', '⬆️', '⬅️', '➡️']
-    root = build_huffman_tree(count_dict, alphabet)
-    encoding_map_with_count = generate_encoding_map_with_count(root, alphabet, count_dict)
-    save_encoding_map_with_count(encoding_map_with_count, output_path)
-    print(f"Encoding map with counts has been written to {output_path}")
-
-if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: python -m huffman_arpeggio <input_file_path> <output_file_path> <target_col> <count_col>")
-        sys.exit(1)
-    
-    input_file_path = sys.argv[1]
-    output_file_path = sys.argv[2]
-    target_col = sys.argv[3]
-    count_col = sys.argv[4]
-    main(input_file_path, output_file_path, target_col, count_col)
