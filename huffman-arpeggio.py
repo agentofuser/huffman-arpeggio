@@ -63,7 +63,7 @@ def generate_encoding_map_with_freq(root, alphabet, frequency_dict):
     traverse(root, [], encoding_map)
     return encoding_map
 
-def main(file_path):
+def main(file_path, output_path):
     df = pd.read_csv(file_path)
     frequency_dict = df.set_index('keyswitch')['freq'].to_dict()
 
@@ -75,15 +75,17 @@ def main(file_path):
     encoding_map_data_with_freq = [{'sequence': ' '.join(path), 'keyswitch': keyswitch, 'frequency': freq} for path, (keyswitch, freq) in encoding_map_with_freq.items()]
 
     encoding_map_df_with_freq = pd.DataFrame(encoding_map_data_with_freq)
-    encoding_map_df_with_freq.sort_values(by='frequency', inplace=True)
+    encoding_map_df_with_freq.sort_values(by='frequency', ascending=False, inplace=True)
     encoding_map_df_with_freq.reset_index(drop=True, inplace=True)
 
-    print(encoding_map_df_with_freq)
+    encoding_map_df_with_freq.to_csv(output_path, index=False)
+    print(f"Encoding map with frequencies has been written to {output_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python huffmanizer.py <file_path>")
+    if len(sys.argv) != 3:
+        print("Usage: python huffman-arpeggio.py <input_file_path> <output_file_path>")
         sys.exit(1)
     
-    file_path = sys.argv[1]
-    main(file_path)
+    input_file_path = sys.argv[1]
+    output_file_path = sys.argv[2]
+    main(input_file_path, output_file_path)
