@@ -58,7 +58,7 @@ While this repository contains only a basic introduction and illustration, the H
 - Generalize predictive typing to predictive doing/coding
 - [Fleet Cyborgism](https://www.youtube.com/watch?v=Knrh-HWUVoo)
 
-That's the wider vision for [Keykapp](https://keykapp.com) architecture that I invite you to explore and apply to your own software.
+That's the wider vision for the [Keykapp](https://keykapp.com) architecture that I invite you to explore and apply to your own software.
 
 Feedback welcome!
 
