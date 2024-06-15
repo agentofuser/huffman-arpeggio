@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "huffman-arpeggio"
+name = "huffman_arpeggio"
 version = "0.1.0"
 description = ""
 authors = ["Helder S Ribeiro <helder@agentofuser.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "huffman-arpeggio"}]
+packages = [{include = "huffman_arpeggio"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
