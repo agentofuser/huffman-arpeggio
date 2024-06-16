@@ -4,6 +4,8 @@ import sys
 import shutil
 import subprocess
 import logging
+import shlex
+from typing import Dict, Tuple
 from huffman_arpeggio.utils import generate_count_dict, generate_zsh_aliases
 from huffman_arpeggio.core import (
     build_huffman_tree,
@@ -18,40 +20,56 @@ def is_alias_conflict(alias: str) -> bool:
     :param alias: The alias to check.
     :return: True if there is a conflict, False otherwise.
     """
+    logger = logging.getLogger(__name__)
     # Check PATH
     if shutil.which(alias) is not None:
+        logger.info(f"Zsh PATH conflict: {repr(alias)}")
         return True
 
     # Check Zsh functions
     result = subprocess.run(
-        ["zsh", "-c", f"whence -w {alias}"], capture_output=True, text=True
+        ["zsh", "-c", f"whence -w {shlex.quote(alias)}"],
+        capture_output=True,
+        text=True,
     )
-    if result.stdout.strip():
+    if result.stdout.strip() != f"{alias}: none":
+        logger.info(f"Zsh function conflict: {result.stdout.strip()}")
         return True
 
     # Check existing aliases
     result = subprocess.run(
-        ["zsh", "-c", f"alias {alias}"], capture_output=True, text=True
+        ["zsh", "-c", f"alias {shlex.quote(alias)}"],
+        capture_output=True,
+        text=True,
     )
     if result.stdout.strip():
+        logger.info(f"Existing alias conflict: {result.stdout.strip()}")
         return True
 
     return False
 
 
-def filter_commands(count_dict, alphabet):
+def filter_commands(
+    count_dict: Dict[str, int], alphabet: str
+) -> Dict[str, int]:
     """
     Filter commands that result in suboptimal or conflicting aliases.
 
     :param count_dict: The initial count dictionary.
     :param alphabet: The alphabet used for generating aliases.
-    :param log_level: The logging level.
     :return: The pruned count dictionary.
     """
     logger = logging.getLogger(__name__)
     logger.debug(f"Initial count_dict: {count_dict}")
 
+    iteration = 0
+
     while True:
+        iteration += 1
+        logger.info(
+            f"Iteration: {iteration}, count_dict size: {len(count_dict)}"
+        )
+
         # Build the Huffman tree
         root = build_huffman_tree(count_dict, alphabet)
 
@@ -70,38 +88,40 @@ def filter_commands(count_dict, alphabet):
         )
 
         # Generate Zsh aliases
-        aliases = generate_zsh_aliases(sorted_encoding_map)
+        candidate_aliases = generate_zsh_aliases(sorted_encoding_map)
 
-        logger.debug(f"Generated aliases: {aliases}")
+        logger.debug(f"Generated aliases: {candidate_aliases}")
 
         # Filter aliases
         pruned = False
         new_count_dict = {}
-        for alias in aliases:
-            alias_name = alias.split("=")[0].replace("alias ", "")
-            target = alias.split("=")[1].strip("'")
+        for alias_name, target in candidate_aliases.items():
+            # logger.info(f"Checking alias: {repr(alias_name)}")
+            # logger.info(f"Target: {repr(target)}")
 
-            if len(alias_name) >= len(target) / 2 or is_alias_conflict(target):
+            if len(alias_name) >= len(target) / 2 or is_alias_conflict(
+                alias_name
+            ):
                 pruned = True
                 logger.info(
-                    f"Pruned alias: {alias_name}, target: {target}, target: {target}"
+                    f"Pruned alias: {repr(alias_name)}, target: {repr(target)}"
                 )
-                if len(alias_name) < len(target) / 2 and is_alias_conflict(
-                    target
-                ):
-                    # FIXME: debugging
-                    quit()
             else:
                 new_count_dict[target] = count_dict.get(target, 0)
 
         if not pruned:
+            logger.info(
+                f"No pruning needed, returning count_dict: {new_count_dict}"
+            )
             return new_count_dict
         elif not new_count_dict:
+            logger.info("No valid commands left, returning empty dictionary")
             return (
                 {}
             )  # Return an empty dictionary if no valid commands are left
         else:
             count_dict = new_count_dict
+            logger.info(f"New count_dict size: {len(count_dict)}")
 
 
 def main():

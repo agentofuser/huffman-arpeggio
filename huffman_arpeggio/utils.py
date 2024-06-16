@@ -52,15 +52,15 @@ def generate_count_dict(strings: List[str]) -> Dict[str, int]:
 
 def generate_zsh_aliases(
     encoding_map_with_count: Dict[Tuple[str, ...], Tuple[str, int]]
-) -> List[str]:
+) -> Dict[str, str]:
     """
-    Generate Zsh aliases from the encoding map.
+    Generate a dictionary of Zsh aliases from the encoding map.
 
     :param encoding_map_with_count: The encoding map with counts.
-    :return: A list of Zsh alias commands.
+    :return: A dictionary with alias names as keys and target commands as values.
     """
-    aliases = []
+    aliases_dict = {}
     for path, (target, count) in encoding_map_with_count.items():
         alias_name = "".join(path)
-        aliases.append(f"alias {alias_name}='{target}'")
-    return aliases
+        aliases_dict[alias_name] = target
+    return aliases_dict
