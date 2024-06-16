@@ -36,7 +36,9 @@ def test_random_trees(num_tests: int, output_dir: str):
         max_count = random.randint(1, 20)  # Random max count value
         num_symbols = random.randint(2, 5)  # Random number of symbols
 
-        count_dict, symbols = generate_random_data(num_targets, max_count, num_symbols)
+        count_dict, symbols = generate_random_data(
+            num_targets, max_count, num_symbols
+        )
         root = build_huffman_tree(count_dict, symbols)
 
         output_path = f"{output_dir}/huffman_tree_{i}"
@@ -44,7 +46,12 @@ def test_random_trees(num_tests: int, output_dir: str):
             len(count_dict), len(symbols)
         )
         visualize_huffman_tree_with_data(
-            root, output_path, count_dict, symbols, num_branch_points, num_padding
+            root,
+            output_path,
+            count_dict,
+            symbols,
+            num_branch_points,
+            num_padding,
         )
 
 
@@ -71,7 +78,9 @@ def visualize_huffman_tree_with_data(
 
     def add_nodes_edges(node: Node, parent_id=None, symbol=None):
         node_id = id(node)
-        label = f"{node.target}\n{node.count}" if node.target else str(node.count)
+        label = (
+            f"{node.target}\n{node.count}" if node.target else str(node.count)
+        )
         shape = "ellipse" if node.target else "box"
         dot.node(name=str(node_id), label=label, shape=shape)
 

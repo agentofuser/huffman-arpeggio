@@ -13,7 +13,9 @@ def visualize_huffman_tree(root: Node, output_path: str):
 
     def add_nodes_edges(node: Node, parent_id=None):
         node_id = id(node)
-        label = f"{node.target}\n{node.count}" if node.target else str(node.count)
+        label = (
+            f"{node.target}\n{node.count}" if node.target else str(node.count)
+        )
         dot.node(name=str(node_id), label=label)
 
         if parent_id is not None:

@@ -65,12 +65,16 @@ def build_huffman_tree(
     if not symbols:
         raise ValueError("symbols must not be empty")
     if len(symbols) != len(set(symbols)):
-        raise ValueError("Symbols must be unique to ensure a prefix-free encoding")
+        raise ValueError(
+            "Symbols must be unique to ensure a prefix-free encoding"
+        )
 
     num_elements = len(count_dict)
     num_branches = len(symbols)
 
-    num_branch_points, num_padding = calculate_padding(num_elements, num_branches)
+    num_branch_points, num_padding = calculate_padding(
+        num_elements, num_branches
+    )
 
     nodes = [Node(count, target) for target, count in count_dict.items()]
 

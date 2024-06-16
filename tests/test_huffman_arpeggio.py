@@ -1,14 +1,22 @@
 import os
 import pytest
 import pandas as pd
-from huffman_arpeggio.core import build_huffman_tree, generate_encoding_map_with_count
-from huffman_arpeggio.utils import load_count_dict, save_encoding_map_with_count
+from huffman_arpeggio.core import (
+    build_huffman_tree,
+    generate_encoding_map_with_count,
+)
+from huffman_arpeggio.utils import (
+    load_count_dict,
+    save_encoding_map_with_count,
+)
 
 
 @pytest.fixture
 def test_data():
     input_file = "tests/data/playstation-qwerty-wikipedia-example-input.csv"
-    expected_output_file = "tests/data/playstation-qwerty-wikipedia-example-output.csv"
+    expected_output_file = (
+        "tests/data/playstation-qwerty-wikipedia-example-output.csv"
+    )
     output_file = "tests/data/tmp_output.csv"
     target_col = "keyswitch"
     count_col = "count"
@@ -28,7 +36,9 @@ def test_data():
 def test_end_to_end(test_data):
     # Load count dictionary
     count_dict = load_count_dict(
-        test_data["input_file"], test_data["target_col"], test_data["count_col"]
+        test_data["input_file"],
+        test_data["target_col"],
+        test_data["count_col"],
     )
 
     # Define the symbols
@@ -43,7 +53,9 @@ def test_end_to_end(test_data):
     )
 
     # Save the encoding map to the output file
-    save_encoding_map_with_count(encoding_map_with_count, test_data["output_file"])
+    save_encoding_map_with_count(
+        encoding_map_with_count, test_data["output_file"]
+    )
 
     # Load the generated output and the expected output
     generated_output = pd.read_csv(test_data["output_file"])
