@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
+import shutil
+import subprocess
+import logging
 from huffman_arpeggio.utils import generate_count_dict, generate_zsh_aliases
 from huffman_arpeggio.core import (
     build_huffman_tree,
@@ -8,38 +11,161 @@ from huffman_arpeggio.core import (
 )
 
 
+def is_alias_conflict(alias: str) -> bool:
+    """
+    Check if the alias conflicts with an existing command in the PATH or with Zsh functions and aliases.
+
+    :param alias: The alias to check.
+    :return: True if there is a conflict, False otherwise.
+    """
+    # Check PATH
+    if shutil.which(alias) is not None:
+        return True
+
+    # Check Zsh functions
+    result = subprocess.run(
+        ["zsh", "-c", f"whence -w {alias}"], capture_output=True, text=True
+    )
+    if result.stdout.strip():
+        return True
+
+    # Check existing aliases
+    result = subprocess.run(
+        ["zsh", "-c", f"alias {alias}"], capture_output=True, text=True
+    )
+    if result.stdout.strip():
+        return True
+
+    return False
+
+
+def filter_commands(count_dict, alphabet):
+    """
+    Filter commands that result in suboptimal or conflicting aliases.
+
+    :param count_dict: The initial count dictionary.
+    :param alphabet: The alphabet used for generating aliases.
+    :param log_level: The logging level.
+    :return: The pruned count dictionary.
+    """
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Initial count_dict: {count_dict}")
+
+    while True:
+        # Build the Huffman tree
+        root = build_huffman_tree(count_dict, alphabet)
+
+        # Generate the encoding map
+        encoding_map = generate_encoding_map_with_count(
+            root, alphabet, count_dict
+        )
+
+        logger.debug(f"Encoding map: {encoding_map}")
+
+        # Sort the encoding map by descending count
+        sorted_encoding_map = dict(
+            sorted(
+                encoding_map.items(), key=lambda item: item[1][1], reverse=True
+            )
+        )
+
+        # Generate Zsh aliases
+        aliases = generate_zsh_aliases(sorted_encoding_map)
+
+        logger.debug(f"Generated aliases: {aliases}")
+
+        # Filter aliases
+        pruned = False
+        new_count_dict = {}
+        for alias in aliases:
+            alias_name = alias.split("=")[0].replace("alias ", "")
+            target = alias.split("=")[1].strip("'")
+
+            if len(alias_name) >= len(target) / 2 or is_alias_conflict(target):
+                pruned = True
+                logger.info(
+                    f"Pruned alias: {alias_name}, target: {target}, target: {target}"
+                )
+                if len(alias_name) < len(target) / 2 and is_alias_conflict(
+                    target
+                ):
+                    # FIXME: debugging
+                    quit()
+            else:
+                new_count_dict[target] = count_dict.get(target, 0)
+
+        if not pruned:
+            return new_count_dict
+        elif not new_count_dict:
+            return (
+                {}
+            )  # Return an empty dictionary if no valid commands are left
+        else:
+            count_dict = new_count_dict
+
+
 def main():
+    # Setup logging
+    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    logger = logging.getLogger(__name__)
+
+    # Parse verbosity level
+    log_level = "info"
+    if "--verbose=debug" in sys.argv:
+        log_level = "debug"
+        logger.setLevel(logging.DEBUG)
+    elif "--verbose=info" in sys.argv:
+        logger.setLevel(logging.INFO)
+        log_level = "info"
+    elif "--verbose" in sys.argv:
+        log_level = "info"
+        logger.setLevel(logging.INFO)
+    else:
+        log_level = None
+        logger.setLevel(logging.WARNING)
+
     # Read lines from stdin
     input_lines = sys.stdin.read().strip().split("\n")
+
+    logger.debug(f"Input lines: {input_lines}")
 
     # Generate the count dictionary
     count_dict = generate_count_dict(input_lines)
 
+    logger.debug(f"Generated count_dict: {count_dict}")
+
     # Define the alphabet for encoding
-    alphabet = [
-        "j",
-        "f",
-        "k",
-        "d",
-        "l",
-        "s",
-    ]
+    alphabet = ["j", "f", "k", "d", "l", "s"]
 
-    # Build the Huffman tree
-    root = build_huffman_tree(count_dict, alphabet)
+    # Filter commands to get the pruned count dictionary
+    pruned_count_dict = filter_commands(count_dict, alphabet)
 
-    # Generate the encoding map
-    encoding_map = generate_encoding_map_with_count(root, alphabet, count_dict)
+    print("HELLO")
 
-    # Sort the encoding map by descending count
+    if not pruned_count_dict:
+        return
+
+    logger.debug(f"Pruned count_dict: {pruned_count_dict}")
+
+    # Build the final Huffman tree
+    root = build_huffman_tree(pruned_count_dict, alphabet)
+
+    # Generate the final encoding map
+    encoding_map = generate_encoding_map_with_count(
+        root, alphabet, pruned_count_dict
+    )
+
+    logger.debug(f"Final encoding map: {encoding_map}")
+
+    # Sort the final encoding map by descending count
     sorted_encoding_map = dict(
         sorted(encoding_map.items(), key=lambda item: item[1][1], reverse=True)
     )
 
-    # Generate Zsh aliases
+    # Generate the final Zsh aliases
     aliases = generate_zsh_aliases(sorted_encoding_map)
 
-    # Output the aliases to stdout
+    # Output the final aliases to stdout
     for alias in aliases:
         print(alias)
 
