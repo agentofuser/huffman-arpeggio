@@ -1,5 +1,6 @@
 import pandas as pd
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
+from collections import Counter
 
 
 def load_count_dict(
@@ -37,3 +38,29 @@ def save_encoding_map_with_count(
     )
     encoding_map_df_with_count.reset_index(drop=True, inplace=True)
     encoding_map_df_with_count.to_csv(output_path, index=False)
+
+
+def generate_count_dict(strings: List[str]) -> Dict[str, int]:
+    """
+    Generate a target => count map from a list of strings.
+
+    :param strings: A list of strings.
+    :return: A dictionary mapping each unique string to its count in the list.
+    """
+    return dict(Counter(strings))
+
+
+def generate_zsh_aliases(
+    encoding_map_with_count: Dict[Tuple[str, ...], Tuple[str, int]]
+) -> List[str]:
+    """
+    Generate Zsh aliases from the encoding map.
+
+    :param encoding_map_with_count: The encoding map with counts.
+    :return: A list of Zsh alias commands.
+    """
+    aliases = []
+    for path, (target, count) in encoding_map_with_count.items():
+        alias_name = "".join(path)
+        aliases.append(f"alias {alias_name}='{target}'")
+    return aliases
