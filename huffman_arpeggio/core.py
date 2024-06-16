@@ -1,46 +1,14 @@
 from heapq import heappush, heappop, heapify
 import math
 from typing import List, Dict, Tuple, Optional
+from dataclasses import dataclass, field
 
 
+@dataclass(order=True, frozen=True)
 class Node:
-    def __init__(
-        self,
-        count: int,
-        target: Optional[str] = None,
-        children: Optional[List["Node"]] = None,
-    ):
-        """
-        Initialize a Node.
-
-        :param count: The count of occurrences.
-        :param target: The target this node represents.
-        :param children: The child nodes.
-        """
-        self.count = count
-        self.target = target
-        self.children = children if children is not None else []
-
-    def __lt__(self, other: "Node") -> bool:
-        """
-        Compare nodes based on their count.
-
-        :param other: Another Node instance.
-        :return: True if this node's count is less than the other node's count.
-        """
-        return self.count < other.count
-
-    def __repr__(self) -> str:
-        """
-        Represent the Node as a string.
-
-        :return: String representation of the Node.
-        """
-        return (
-            f"Node(count={self.count}, "
-            f"target={self.target}, "
-            f"children={self.children})"
-        )
+    count: int
+    target: Optional[str] = field(compare=False)
+    children: List["Node"] = field(default_factory=list, compare=False)
 
 
 def calculate_padding(num_elements: int, num_branches: int) -> Tuple[int, int]:
@@ -90,8 +58,12 @@ def build_huffman_tree(
     :param count_dict: A dictionary mapping targets to their counts.
     :param symbols: A list of symbols used in the encoding.
     :return: The root of the Huffman tree.
+    :raises ValueError: If symbols are not unique or if inputs are invalid.
     """
-    # Ensure symbols are unique
+    if not count_dict:
+        raise ValueError("count_dict must not be empty")
+    if not symbols:
+        raise ValueError("symbols must not be empty")
     if len(symbols) != len(set(symbols)):
         raise ValueError("Symbols must be unique to ensure a prefix-free encoding")
 
