@@ -31,15 +31,15 @@ def test_end_to_end(test_data):
         test_data["input_file"], test_data["target_col"], test_data["count_col"]
     )
 
-    # Define the alphabet
-    alphabet = ["X", "O", "□", "∆", "⬇️", "⬆️", "⬅️", "➡️"]
+    # Define the symbols
+    symbols = ["X", "O", "□", "∆", "⬇️", "⬆️", "⬅️", "➡️"]
 
     # Build Huffman tree
-    root = build_huffman_tree(count_dict, alphabet)
+    root = build_huffman_tree(count_dict, symbols)
 
     # Generate encoding map
     encoding_map_with_count = generate_encoding_map_with_count(
-        root, alphabet, count_dict
+        root, symbols, count_dict
     )
 
     # Save the encoding map to the output file

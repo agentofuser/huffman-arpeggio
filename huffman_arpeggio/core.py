@@ -2,18 +2,17 @@ from heapq import heappush, heappop, heapify
 import math
 from typing import List, Dict, Tuple, Optional
 
-
 class Node:
-    def __init__(self, count: int, character: Optional[str] = None, children: Optional[List['Node']] = None):
+    def __init__(self, count: int, target: Optional[str] = None, children: Optional[List['Node']] = None):
         """
         Initialize a Node.
 
         :param count: The count of occurrences.
-        :param character: The character this node represents.
+        :param target: The target this node represents.
         :param children: The child nodes.
         """
         self.count = count
-        self.character = character
+        self.target = target
         self.children = children if children is not None else []
 
     def __lt__(self, other: 'Node') -> bool:
@@ -33,10 +32,9 @@ class Node:
         """
         return (
             f"Node(count={self.count}, "
-            f"character={self.character}, "
+            f"target={self.target}, "
             f"children={self.children})"
         )
-
 
 def calculate_padding(num_elements: int, num_branches: int) -> Tuple[int, int]:
     """
@@ -49,7 +47,6 @@ def calculate_padding(num_elements: int, num_branches: int) -> Tuple[int, int]:
     num_branch_points = math.ceil((num_elements - 1) / (num_branches - 1))
     num_padding = 1 + (num_branches - 1) * num_branch_points - num_elements
     return num_branch_points, num_padding
-
 
 def merge_nodes(nodes: List[Node], num_branches: int) -> Optional[Node]:
     """
@@ -75,21 +72,24 @@ def merge_nodes(nodes: List[Node], num_branches: int) -> Optional[Node]:
 
     return nodes[0] if nodes else None
 
-
-def build_huffman_tree(count_dict: Dict[str, int], alphabet: List[str]) -> Optional[Node]:
+def build_huffman_tree(count_dict: Dict[str, int], symbols: List[str]) -> Optional[Node]:
     """
     Build the Huffman tree.
 
-    :param count_dict: A dictionary mapping characters to their counts.
-    :param alphabet: A list of symbols used in the encoding.
+    :param count_dict: A dictionary mapping targets to their counts.
+    :param symbols: A list of symbols used in the encoding.
     :return: The root of the Huffman tree.
     """
+    # Ensure symbols are unique
+    if len(symbols) != len(set(symbols)):
+        raise ValueError("Symbols must be unique to ensure a prefix-free encoding")
+
     num_elements = len(count_dict)
-    num_branches = len(alphabet)
+    num_branches = len(symbols)
 
     num_branch_points, num_padding = calculate_padding(num_elements, num_branches)
 
-    nodes = [Node(count, char) for char, count in count_dict.items()]
+    nodes = [Node(count, target) for target, count in count_dict.items()]
 
     for _ in range(num_padding):
         nodes.append(Node(0, None))
@@ -98,21 +98,20 @@ def build_huffman_tree(count_dict: Dict[str, int], alphabet: List[str]) -> Optio
 
     return root
 
-
-def generate_encoding_map_with_count(root: Node, alphabet: List[str], count_dict: Dict[str, int]) -> Dict[Tuple[str, ...], Tuple[str, int]]:
+def generate_encoding_map_with_count(root: Node, symbols: List[str], count_dict: Dict[str, int]) -> Dict[Tuple[str, ...], Tuple[str, int]]:
     """
-    Generate an encoding map with character counts.
+    Generate an encoding map with targets and counts.
 
     :param root: The root of the Huffman tree.
-    :param alphabet: A list of symbols used in the encoding.
-    :param count_dict: A dictionary mapping characters to their counts.
-    :return: An encoding map with character counts.
+    :param symbols: A list of symbols used in the encoding.
+    :param count_dict: A dictionary mapping targets to their counts.
+    :return: An encoding map with targets and counts.
     """
     def traverse(node: Node, path: List[str], encoding_map: Dict[Tuple[str, ...], Tuple[str, int]]):
-        if node.character is not None:
-            encoding_map[tuple(path)] = (node.character, count_dict[node.character])
+        if node.target is not None:
+            encoding_map[tuple(path)] = (node.target, count_dict[node.target])
         for i, child in enumerate(node.children):
-            traverse(child, path + [alphabet[i]], encoding_map)
+            traverse(child, path + [symbols[i]], encoding_map)
 
     encoding_map = {}
     traverse(root, [], encoding_map)
