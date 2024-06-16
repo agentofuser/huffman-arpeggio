@@ -20,13 +20,13 @@ jobs:
         pip install poetry
         poetry install
 
-    - name: Lint with flake8
-      run: |
-        poetry run flake8 .
-
     - name: Format with black
       run: |
         poetry run black --check .
+
+    - name: Lint with flake8
+      run: |
+        poetry run flake8 .
 
     - name: Test with pytest
       run: |

@@ -1,5 +1,6 @@
 import pandas as pd
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple
+
 
 def load_count_dict(file_path: str, target_col: str, count_col: str) -> Dict[str, int]:
     """
@@ -13,7 +14,10 @@ def load_count_dict(file_path: str, target_col: str, count_col: str) -> Dict[str
     df = pd.read_csv(file_path)
     return df.set_index(target_col)[count_col].to_dict()
 
-def save_encoding_map_with_count(encoding_map_with_count: Dict[Tuple[str, ...], Tuple[str, int]], output_path: str):
+
+def save_encoding_map_with_count(
+    encoding_map_with_count: Dict[Tuple[str, ...], Tuple[str, int]], output_path: str
+):
     """
     Save the encoding map with counts to a CSV file.
 
