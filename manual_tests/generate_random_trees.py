@@ -2,7 +2,7 @@ import os
 import random
 import string
 from graphviz import Digraph
-from huffman_arpeggio.core import Node, build_huffman_tree
+from huffman_arpeggio.core import Node, build_huffman_tree, calculate_padding
 
 
 def generate_random_data(num_targets: int, max_count: int, num_symbols: int):
@@ -40,35 +40,52 @@ def test_random_trees(num_tests: int, output_dir: str):
         root = build_huffman_tree(count_dict, symbols)
 
         output_path = f"{output_dir}/huffman_tree_{i}"
-        visualize_huffman_tree_with_data(root, output_path, count_dict, symbols)
+        num_branch_points, num_padding = calculate_padding(
+            len(count_dict), len(symbols)
+        )
+        visualize_huffman_tree_with_data(
+            root, output_path, count_dict, symbols, num_branch_points, num_padding
+        )
 
 
 def visualize_huffman_tree_with_data(
-    root: Node, output_path: str, count_dict: dict, symbols: list
+    root: Node,
+    output_path: str,
+    count_dict: dict,
+    symbols: list,
+    num_branch_points: int,
+    num_padding: int,
 ):
     """
-    Visualize the Huffman tree using Graphviz, embedding the count_dict and symbols.
+    Visualize the Huffman tree using Graphviz, embedding the count_dict, symbols,
+    and padding calculation.
 
     :param root: The root of the Huffman tree.
     :param output_path: The path to save the output visualization file.
     :param count_dict: The count dictionary used to build the tree.
     :param symbols: The symbols used for encoding.
+    :param num_branch_points: Number of branch points calculated.
+    :param num_padding: Number of padding nodes calculated.
     """
     dot = Digraph(comment="Huffman Tree")
 
-    def add_nodes_edges(node: Node, parent_id=None):
+    def add_nodes_edges(node: Node, parent_id=None, symbol=None):
         node_id = id(node)
         label = f"{node.target}\n{node.count}" if node.target else str(node.count)
-        dot.node(name=str(node_id), label=label)
+        shape = "ellipse" if node.target else "box"
+        dot.node(name=str(node_id), label=label, shape=shape)
 
-        if parent_id is not None:
-            dot.edge(str(parent_id), str(node_id))
+        if parent_id is not None and symbol is not None:
+            dot.edge(str(parent_id), str(node_id), label=symbol)
 
-        for child in node.children:
-            add_nodes_edges(child, node_id)
+        for i, child in enumerate(node.children):
+            add_nodes_edges(child, node_id, symbols[i])
 
     # Add metadata to the graph
-    metadata = f"Count Dict: {count_dict}\nSymbols: {symbols}"
+    metadata = (
+        f"Count Dict: {count_dict}\nSymbols: {symbols}\n"
+        f"Branch Points: {num_branch_points}\nPadding: {num_padding}"
+    )
     dot.attr(label=metadata)
     dot.attr(fontsize="10")
 
