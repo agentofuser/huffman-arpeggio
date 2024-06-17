@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import shutil
 import subprocess
 import logging
 import shlex
