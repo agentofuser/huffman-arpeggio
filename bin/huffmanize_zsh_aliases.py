@@ -15,38 +15,39 @@ from huffman_arpeggio.core import (
 
 def is_alias_conflict(alias: str) -> bool:
     """
-    Check if the alias conflicts with an existing command in the PATH or with Zsh functions and aliases.
+    Check if the alias conflicts with an existing command in the PATH, Zsh
+    functions, aliases, shell builtins, or keywords.
 
     :param alias: The alias to check.
     :return: True if there is a conflict, False otherwise.
     """
     logger = logging.getLogger(__name__)
-    # Check PATH
-    if shutil.which(alias) is not None:
-        logger.info(f"Zsh PATH conflict: {repr(alias)}")
-        return True
 
-    # Check Zsh functions
     result = subprocess.run(
-        ["zsh", "-c", f"whence -w {shlex.quote(alias)}"],
+        ["zsh", "-i", "-c", f"type {shlex.quote(alias)}"],
         capture_output=True,
         text=True,
     )
-    if result.stdout.strip() != f"{alias}: none":
-        logger.info(f"Zsh function conflict: {result.stdout.strip()}")
-        return True
+    if result.stdout.strip().endswith("not found"):
+        return False
 
-    # Check existing aliases
-    result = subprocess.run(
-        ["zsh", "-c", f"alias {shlex.quote(alias)}"],
-        capture_output=True,
-        text=True,
-    )
-    if result.stdout.strip():
-        logger.info(f"Existing alias conflict: {result.stdout.strip()}")
-        return True
+    logger.info(f"Shell conflict: {result.stdout.strip()}")
+    return True
 
-    return False
+
+def sanitize_input_lines(input_lines: List[str]) -> List[str]:
+    """
+    Sanitize input lines to remove trailing backslashes and any other unwanted
+    characters.
+
+    :param input_lines: The list of input command lines.
+    :return: The sanitized list of input command lines.
+    """
+    sanitized_lines = []
+    for line in input_lines:
+        sanitized_line = line.rstrip("\\").strip()
+        sanitized_lines.append(sanitized_line)
+    return sanitized_lines
 
 
 def filter_commands(
@@ -119,8 +120,10 @@ def filter_commands(
 
                 # Augment the alias path to avoid conflict
                 augmented_alias_path = alias_path
+                augment_index = 0
                 while is_alias_conflict("".join(augmented_alias_path)):
-                    augmented_alias_path += (alphabet[0],)
+                    augmented_alias_path += (alphabet[augment_index],)
+                    augment_index = (augment_index + 1) % len(alphabet)
                 if len(augmented_alias_path) < len(target) / 2:
                     new_count_dict[target] = count_dict.get(target, 0)
                     valid_aliases[alias_path] = (
@@ -134,7 +137,7 @@ def filter_commands(
             new_count_dict[target] = count_dict.get(target, 0)
 
         if not pruned:
-            logger.info(f"No pruning needed, returning encoding map")
+            logger.info("No pruning needed, returning encoding map")
             logger.debug(f"Final encoding map: {updated_encoding_map}")
             return dict(
                 sorted(
@@ -151,38 +154,19 @@ def filter_commands(
             logger.info(f"New count_dict size: {len(count_dict)}")
 
 
-def sanitize_input_lines(input_lines: List[str]) -> List[str]:
-    """
-    Sanitize input lines to remove trailing backslashes and any other unwanted characters.
-
-    :param input_lines: The list of input command lines.
-    :return: The sanitized list of input command lines.
-    """
-    sanitized_lines = []
-    for line in input_lines:
-        sanitized_line = line.rstrip("\\").strip()
-        sanitized_lines.append(sanitized_line)
-    return sanitized_lines
-
-
 def main():
     # Setup logging
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
     logger = logging.getLogger(__name__)
 
     # Parse verbosity level
-    log_level = "info"
     if "--verbose=debug" in sys.argv:
-        log_level = "debug"
         logger.setLevel(logging.DEBUG)
     elif "--verbose=info" in sys.argv:
         logger.setLevel(logging.INFO)
-        log_level = "info"
     elif "--verbose" in sys.argv:
-        log_level = "info"
         logger.setLevel(logging.INFO)
     else:
-        log_level = None
         logger.setLevel(logging.WARNING)
 
     # Read lines from stdin
