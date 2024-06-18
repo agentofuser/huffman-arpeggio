@@ -45,6 +45,6 @@ def test_generate_encoding_map_with_count():
     encoding_map = generate_encoding_map_with_count(root, symbols, count_dict)
 
     # Check the keys and their corresponding values
-    assert encoding_map[("X",)] == ("C", 10)
-    assert encoding_map[("O", "X")] == ("A", 5)
-    assert encoding_map[("O", "O")] == ("B", 7)
+    assert encoding_map[("O",)] == ("C", 10)
+    assert encoding_map[("X", "O")] == ("A", 5)
+    assert encoding_map[("X", "X")] == ("B", 7)

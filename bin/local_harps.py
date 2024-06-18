@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 
-import subprocess
 import os
+import subprocess
+
+from rich import print
+
+from bin.huffmanize_zsh_aliases import filter_commands, sanitize_input_lines
 from huffman_arpeggio.utils import generate_count_dict
-from huffman_arpeggio.core import (
-    build_huffman_tree,
-    generate_encoding_map_with_count,
-)
-from bin.huffmanize_zsh_aliases import (
-    is_alias_conflict,
-    sanitize_input_lines,
-    filter_commands,
-)
 
 
 def get_history():

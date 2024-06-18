@@ -98,6 +98,12 @@ def generate_encoding_map_with_count(
     :return: An encoding map with targets and counts.
     """
 
+    # HACK: copy and reverse the symbols list to use its order as a preference
+    # ranking for the encoding map, making the first symbol in the list go to
+    # the highest count node at that level, and so forth
+    sorted_symbols = symbols.copy()
+    sorted_symbols.reverse()
+
     def traverse(
         node: Node,
         path: List[str],
@@ -106,7 +112,7 @@ def generate_encoding_map_with_count(
         if node.target is not None:
             encoding_map[tuple(path)] = (node.target, count_dict[node.target])
         for i, child in enumerate(node.children):
-            traverse(child, path + [symbols[i]], encoding_map)
+            traverse(child, path + [sorted_symbols[i]], encoding_map)
 
     encoding_map = {}
     traverse(root, [], encoding_map)
