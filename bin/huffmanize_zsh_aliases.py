@@ -50,7 +50,8 @@ def sanitize_input_lines(input_lines: List[str]) -> List[str]:
 
 
 def filter_commands(
-    count_dict: Dict[str, int], alphabet: List[str]
+    count_dict: Dict[str, int],
+    alphabet: List[str],
 ) -> Dict[Tuple[str, ...], Tuple[str, int]]:
     logger = logging.getLogger(__name__)
     logger.debug(f"Initial count_dict: {count_dict}")
@@ -74,6 +75,27 @@ def filter_commands(
         )
 
         logger.debug(f"Encoding map: {encoding_map}")
+
+        # DEBUG: figure out what's happening to `('j',)` which shows up in the
+        # first iteration encoding map, then disappears in the second iteration,
+        # and generates no "Pruned" log message.
+        # The _target_ is still assigned a different alias path/name, but the
+        # 'j' is _not_ a conflict, and it's never reused, even as length-2
+        # aliases are created:
+        # Iteration: 1, count_dict size: 11
+        # Encoding map: {('j',): ('atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases', 7), ('f',): ('gd', 8), ('k',): ('gs', 10), ('d',): ('vz', 11), ('l',): ('atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases --verbose=info', 17), ('s', 'j'): ('poetry run local-harps', 4), ('s', 'f'): ('ck', 4), ('s', 'k'): ('da', 5), ('s', 'd'): ('poetry run scripts/run_all.sh', 6), ('s', 'l'): ('l', 6), ('s', 's'): ('poetry run python', 7)}
+        # Pruned alias (poor ROI): ('f',), target: gd
+        # Pruned alias (poor ROI): ('k',), target: gs
+        # Pruned alias (poor ROI): ('d',), target: vz
+        # Shell conflict: l is an alias for eza --long --classify --header --accessed --all --group-directories-first
+        # Pruned alias (conflict): ('l',), target: atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases --verbose=info
+        # Shell conflict: l is an alias for eza --long --classify --header --accessed --all --group-directories-first
+        # Pruned alias (poor ROI): ('s', 'f'), target: ck
+        # Pruned alias (poor ROI): ('s', 'k'), target: da
+        # Pruned alias (poor ROI): ('s', 'l'), target: l
+        # New count_dict size: 5
+        # Iteration: 2, count_dict size: 5
+        # Encoding map: {('f',): ('poetry run local-harps', 4), ('k',): ('poetry run scripts/run_all.sh', 6), ('d',): ('atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases', 7), ('l',): ('poetry run python', 7), ('s',): ('atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases --verbose=info', 17)}
 
         # Clone the encoding map to update it without affecting the iteration
         updated_encoding_map = encoding_map.copy()

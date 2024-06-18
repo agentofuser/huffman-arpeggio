@@ -1,0 +1,5 @@
+alias s='atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases --verbose=info'
+alias d='atuin history list --format="{command}" | poetry run huffmanize-zsh-aliases'
+alias l='poetry run python'
+alias k='poetry run scripts/run_all.sh'
+alias fj='poetry run local-harps'

@@ -28,3 +28,4 @@ line-length = 79
 [tool.poetry.scripts]
 count-lines-to-csv = "bin.count_lines_to_csv:main"
 huffmanize-zsh-aliases = "bin.huffmanize_zsh_aliases:main"
+local-harps = "bin.local_harps:main"
